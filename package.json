@@ -1,0 +1,18 @@
+{
+  "name": "revroi-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for the RevROI chrome extension",
+  "main": "main.ts",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}
