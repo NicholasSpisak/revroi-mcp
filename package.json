@@ -1,6 +1,6 @@
 {
   "name": "revroi-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP Server for the RevROI chrome extension",
   "main": "main.ts",
   "directories": {

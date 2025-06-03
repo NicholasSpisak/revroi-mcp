@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.0.1
 info:
   title: RevROI MCP Server API
   description: |
@@ -43,27 +43,27 @@ paths:
           description: Retailer identifier (e.g., kohls, target, walmart)
           schema:
             type: string
-            pattern: '^[a-z0-9-]+$'
+            pattern: "^[a-z0-9-]+$"
             minLength: 2
             maxLength: 50
           example: kohls
       responses:
-        '200':
+        "200":
           description: Successful response with gift card offers
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GiftCardsResponse'
+                $ref: "#/components/schemas/GiftCardsResponse"
               example:
-                $ref: '#/components/examples/GiftCardsExample'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/examples/GiftCardsExample"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /cashback/{retailer}:
     get:
@@ -81,27 +81,27 @@ paths:
           description: Retailer identifier (e.g., kohls, target, walmart)
           schema:
             type: string
-            pattern: '^[a-z0-9-]+$'
+            pattern: "^[a-z0-9-]+$"
             minLength: 2
             maxLength: 50
           example: kohls
       responses:
-        '200':
+        "200":
           description: Successful response with cashback offers
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CashbackResponse'
+                $ref: "#/components/schemas/CashbackResponse"
               example:
-                $ref: '#/components/examples/CashbackExample'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/examples/CashbackExample"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
   schemas:
@@ -148,7 +148,7 @@ components:
           type: array
           description: List of gift card offers sorted by discount rate (highest first)
           items:
-            $ref: '#/components/schemas/GiftCardOffer'
+            $ref: "#/components/schemas/GiftCardOffer"
         proxy:
           type: string
           description: Proxy server address used for the request
@@ -251,17 +251,17 @@ components:
           type: array
           description: List of cashback offers
           items:
-            $ref: '#/components/schemas/CashbackOffer'
+            $ref: "#/components/schemas/CashbackOffer"
         travel_points:
           type: array
           description: List of travel rewards programs
           items:
-            $ref: '#/components/schemas/TravelPointsOffer'
+            $ref: "#/components/schemas/TravelPointsOffer"
         credit_points:
           type: array
           description: List of credit card rewards programs
           items:
-            $ref: '#/components/schemas/CreditPointsOffer'
+            $ref: "#/components/schemas/CreditPointsOffer"
         logo:
           type: string
           format: uri
@@ -297,7 +297,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: INVALID_REQUEST
             message: Missing required parameter 'action'
@@ -310,7 +310,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: RETAILER_NOT_FOUND
             message: No data available for retailer 'invalidstore'
@@ -322,7 +322,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: RATE_LIMIT_EXCEEDED
             message: Too many requests. Please try again later.
@@ -336,7 +336,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           example:
             error: INTERNAL_ERROR
             message: An unexpected error occurred
