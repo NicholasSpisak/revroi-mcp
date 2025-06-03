@@ -1,0 +1,449 @@
+openapi: 3.0.3
+info:
+  title: RevROI MCP Server API
+  description: |
+    RevROI MCP Server provides a unified API interface for retrieving discounted gift card options 
+    and cashback offers from various retail partners. The server aggregates data from multiple 
+    providers to help users maximize savings through gift card discounts, cashback programs, 
+    travel rewards, and credit card points.
+  version: 1.0.0
+  contact:
+    name: RevROI Support
+    email: support@revroi.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://revroi.oaroulette.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+tags:
+  - name: Gift Cards
+    description: Endpoints for retrieving discounted gift card options
+  - name: Cashback
+    description: Endpoints for retrieving cashback offers and rewards
+
+paths:
+  /gift-cards/{retailer}:
+    get:
+      operationId: getGiftCards
+      summary: Get gift card discounts for a retailer
+      description: |
+        Retrieves available discounted gift card options for the specified retailer.
+        Results are sorted by discount rate with the highest discounts first.
+      tags:
+        - Gift Cards
+      parameters:
+        - name: retailer
+          in: path
+          required: true
+          description: Retailer identifier (e.g., kohls, target, walmart)
+          schema:
+            type: string
+            pattern: '^[a-z0-9-]+$'
+            minLength: 2
+            maxLength: 50
+          example: kohls
+      responses:
+        '200':
+          description: Successful response with gift card offers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GiftCardsResponse'
+              example:
+                $ref: '#/components/examples/GiftCardsExample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /cashback/{retailer}:
+    get:
+      operationId: getCashback
+      summary: Get cashback offers for a retailer
+      description: |
+        Retrieves cashback offers, travel rewards, and credit card points for the specified retailer.
+        Results include standard cashback percentages, airline/hotel points, and credit card rewards.
+      tags:
+        - Cashback
+      parameters:
+        - name: retailer
+          in: path
+          required: true
+          description: Retailer identifier (e.g., kohls, target, walmart)
+          schema:
+            type: string
+            pattern: '^[a-z0-9-]+$'
+            minLength: 2
+            maxLength: 50
+          example: kohls
+      responses:
+        '200':
+          description: Successful response with cashback offers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashbackResponse'
+              example:
+                $ref: '#/components/examples/CashbackExample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    GiftCardOffer:
+      type: object
+      required:
+        - favicon
+        - rate
+        - title
+        - link
+        - displayImage
+      properties:
+        favicon:
+          type: string
+          format: uri
+          description: URL to the provider's logo or favicon
+          example: https://www.cardbear.com/img/gcstore/raise.png
+        rate:
+          type: string
+          description: Discount percentage offered
+          pattern: '^[0-9]+(\.[0-9]+)?%$'
+          example: "12%"
+        title:
+          type: string
+          description: Provider name
+          example: Raise
+        link:
+          type: string
+          format: uri
+          description: Affiliate or redirect URL to the provider
+          example: https://geta.raise.com/DLEE6839?ext_revroi=kohls
+        displayImage:
+          type: boolean
+          description: Whether to display the provider's image
+          example: false
+
+    GiftCardsResponse:
+      type: object
+      required:
+        - gift_cards
+        - proxy
+      properties:
+        gift_cards:
+          type: array
+          description: List of gift card offers sorted by discount rate (highest first)
+          items:
+            $ref: '#/components/schemas/GiftCardOffer'
+        proxy:
+          type: string
+          description: Proxy server address used for the request
+          example: jp.proxymesh.com:31280
+
+    CashbackOffer:
+      type: object
+      required:
+        - favicon
+        - title
+        - link
+        - rate
+      properties:
+        favicon:
+          type: string
+          format: uri
+          description: URL to the provider's favicon
+          example: https://www.rakuten.com/favicon.ico
+        title:
+          type: string
+          description: Provider name
+          example: Rakuten
+        link:
+          type: string
+          format: uri
+          description: Affiliate URL with tracking parameters
+          example: https://www.rakuten.com/r/THEGEN171?eeid=28187&ext_revroi=kohls
+        rate:
+          type: string
+          description: Cashback percentage or special format (may include asterisks for special offers)
+          pattern: '^[0-9]+(\.[0-9]+)?%( \([^)]+\))?$'
+          example: "2.5% (25%*)"
+
+    TravelPointsOffer:
+      type: object
+      required:
+        - favicon
+        - title
+        - link
+        - rate
+      properties:
+        favicon:
+          type: string
+          format: uri
+          description: URL to the airline/hotel program favicon
+          example: https://www.united.com/favicon.ico
+        title:
+          type: string
+          description: Travel program name
+          example: United Mileage Plus
+        link:
+          type: string
+          format: uri
+          description: URL to the travel program portal
+          example: https://www.cashbackmonitor.com/go-to/United-Mileage-Plus/kohls
+        rate:
+          type: string
+          description: Points or miles per dollar spent
+          pattern: '^[0-9]+(\.[0-9]+)? (mi|pt)\.\/$'
+          example: "2 mi./$"
+
+    CreditPointsOffer:
+      type: object
+      required:
+        - favicon
+        - title
+        - link
+        - rate
+      properties:
+        favicon:
+          type: string
+          format: uri
+          description: URL to the credit card issuer favicon
+          example: https://www.chase.com/favicon.ico
+        title:
+          type: string
+          description: Credit card program name
+          example: Chase UR (Sapphire)
+        link:
+          type: string
+          format: uri
+          description: URL to the credit card portal
+          example: https://www.cashbackmonitor.com/go-to/Chase-UR-Sapphire/kohls
+        rate:
+          type: string
+          description: Points per dollar spent
+          pattern: '^[0-9]+(\.[0-9]+)? pt\.\/$'
+          example: "2 pt./$"
+
+    CashbackResponse:
+      type: object
+      required:
+        - cashback
+        - travel_points
+        - credit_points
+        - logo
+        - proxy
+      properties:
+        cashback:
+          type: array
+          description: List of cashback offers
+          items:
+            $ref: '#/components/schemas/CashbackOffer'
+        travel_points:
+          type: array
+          description: List of travel rewards programs
+          items:
+            $ref: '#/components/schemas/TravelPointsOffer'
+        credit_points:
+          type: array
+          description: List of credit card rewards programs
+          items:
+            $ref: '#/components/schemas/CreditPointsOffer'
+        logo:
+          type: string
+          format: uri
+          description: URL to the retailer's logo
+          example: https://www.cashbackmonitor.com/img/stores/kohls.jpg
+        proxy:
+          type: string
+          description: Proxy server address used for the request
+          example: au.proxymesh.com:31280
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: INVALID_REQUEST
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid retailer hostname provided
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: INVALID_REQUEST
+            message: Missing required parameter 'action'
+            details:
+              parameter: action
+              required: true
+
+    NotFound:
+      description: Retailer not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: RETAILER_NOT_FOUND
+            message: No data available for retailer 'invalidstore'
+            details:
+              retailer: invalidstore
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: RATE_LIMIT_EXCEEDED
+            message: Too many requests. Please try again later.
+            details:
+              limit: 100
+              window: 60
+              retry_after: 45
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: INTERNAL_ERROR
+            message: An unexpected error occurred
+            details:
+              request_id: abc123
+
+  examples:
+    GiftCardsExample:
+      summary: Gift cards response for Kohl's
+      value:
+        gift_cards:
+          - favicon: https://www.cardbear.com/img/gcstore/arbitrage.png
+            rate: "12%"
+            title: Arbitrage
+            link: https://www.cardbear.com/r.php?storeid=128&giftstore=arbitrage
+            displayImage: false
+          - favicon: https://www.cardbear.com/img/gcstore/carddepot.png
+            rate: "10%"
+            title: Carddepot
+            link: https://www.cardbear.com/r.php?storeid=128&giftstore=carddepot
+            displayImage: false
+          - favicon: https://www.cardbear.com/img/gcstore/cardcookie.png
+            rate: "10%"
+            title: Cardcookie
+            link: https://www.cardbear.com/r.php?storeid=128&giftstore=cardcookie
+            displayImage: false
+          - favicon: https://www.cardbear.com/img/gcstore/giftcardoutlets.png
+            rate: "6.5%"
+            title: Giftcardoutlets
+            link: https://www.cardbear.com/r.php?storeid=128&giftstore=giftcardoutlets
+            displayImage: false
+          - favicon: https://www.cardbear.com/img/gcstore/raise.png
+            rate: "4.2%"
+            title: "GCX (Raise)"
+            link: https://geta.raise.com/DLEE6839?ext_revroi=kohls
+            displayImage: false
+          - favicon: https://www.cardbear.com/img/gcstore/giftcardsaving.png
+            rate: "4%"
+            title: Giftcardsaving
+            link: https://www.cardbear.com/r.php?storeid=128&giftstore=giftcardsaving
+            displayImage: false
+          - favicon: https://www.cardbear.com/img/gcstore/cardcash.png
+            rate: "3%"
+            title: Cardcash
+            link: https://www.cardbear.com/r.php?storeid=128&giftstore=cardcash
+            displayImage: false
+        proxy: jp.proxymesh.com:31280
+
+    CashbackExample:
+      summary: Cashback response for Kohl's
+      value:
+        cashback:
+          - favicon: https://www.cashbackmonitor.com/img/site_ico/hda.png
+            title: Hoopla Doopla
+            link: https://hoopladoopla.com?ref=mvQKkGNYXZBnxyz7V97ZJQA4Dr8a5wEpj0PRLebJ&ext_revroi=kohls
+            rate: "4.5%"
+          - favicon: https://www.inboxdollars.com/favicon.ico
+            title: InboxDollars
+            link: https://www.cashbackmonitor.com/go-to/InboxDollars/kohls?asingadget=true
+            rate: "4%"
+          - favicon: https://www.maxrebates.com/favicon.ico
+            title: MaxRebates
+            link: https://www.maxrebates.com/m/J9DKKS?ext_revroi=kohls
+            rate: "3%"
+          - favicon: https://www.simplybestcoupons.com/favicon.ico
+            title: Simply Best Coupons
+            link: https://www.simplybestcoupons.com/Stores/Cashback/?refid=120861&ext_revroi=kohls
+            rate: "3.00%"
+          - favicon: https://www.gocashback.com/favicon.ico
+            title: GoCashBack
+            link: https://www.gocashback.com/r/2113626?ext_revroi=kohls
+            rate: "2.6%"
+        travel_points:
+          - favicon: https://www.united.com/favicon.ico
+            title: "United Mileage Plus (ua cc)"
+            link: https://www.cashbackmonitor.com/go-to/United-Mileage-Plus-(ua-cc)/kohls?asingadget=true
+            rate: "2 mi./$"
+          - favicon: https://www.aa.com/content/images/chrome/rebrand/favicon.png
+            title: American AAdvantage
+            link: https://www.cashbackmonitor.com/go-to/American-AAdvantage/kohls?asingadget=true
+            rate: "2 mi./$"
+          - favicon: https://www.delta.com/etc/designs/delta/favicon.ico
+            title: Delta Sky Miles
+            link: https://www.cashbackmonitor.com/go-to/Delta-Sky-Miles/kohls?asingadget=true
+            rate: "1.5 mi./$"
+        credit_points:
+          - favicon: https://www.chase.com/etc/designs/chase-ux/favicon.ico
+            title: "Chase UR (Ink Preferred)"
+            link: https://www.cashbackmonitor.com/go-to/Chase-UR-(Ink-Preferred)/kohls?asingadget=true
+            rate: "2 pt./$"
+          - favicon: https://www.chase.com/etc/designs/chase-ux/favicon.ico
+            title: "Chase UR (Freedom)"
+            link: https://www.cashbackmonitor.com/go-to/Chase-UR-(Freedom)/kohls?asingadget=true
+            rate: "2 pt./$"
+          - favicon: https://cartera-cdn.freetls.fastly.net/images/orgs/barclaycard/imgs/favicon/favicon.ico
+            title: BarclayCard RewardsBoost
+            link: https://www.cashbackmonitor.com/go-to/BarclayCard-RewardsBoost/kohls?asingadget=true
+            rate: "2 pt./$"
+        logo: https://www.cashbackmonitor.com/img/stores/kohls.jpg
+        proxy: au.proxymesh.com:31280
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (optional for public endpoints)
+
+security:
+  - ApiKeyAuth: []
